@@ -529,34 +529,39 @@
                     $row.ServerInstance = $SQLInstance
                 }
             }
-
-            switch ($As)
+            if ($ds.Tables.Count -gt 0)
             {
-                'DataSet'
+                switch ($As)
                 {
-                    $ds
-                }
-                'DataTable'
-                {
-                    $ds.Tables
-                }
-                'DataRow'
-                {
-                    $ds.Tables[0]
-                }
-                'PSObject'
-                {
-                    #Scrub DBNulls - Provides convenient results you can use comparisons with
-                    #Introduces overhead (e.g. ~2000 rows w/ ~80 columns went from .15 Seconds to .65 Seconds - depending on your data could be much more!)
-                    foreach ($row in $ds.Tables[0].Rows)
+                    'DataSet'
                     {
-                        [DBNullScrubber]::DataRowToPSObject($row)
+                        $ds
+                    }
+                    'DataTable'
+                    {
+                        $ds.Tables
+                    }
+                    'DataRow'
+                    {
+                        $ds.Tables[0]
+                    }
+                    'PSObject'
+                    {
+                        #Scrub DBNulls - Provides convenient results you can use comparisons with
+                        #Introduces overhead (e.g. ~2000 rows w/ ~80 columns went from .15 Seconds to .65 Seconds - depending on your data could be much more!)
+                        foreach ($row in $ds.Tables[0].Rows)
+                        {
+                            [DBNullScrubber]::DataRowToPSObject($row)
+                        }
+                    }
+                    'SingleValue'
+                    {
+                        $ds.Tables[0] | Select-Object -ExpandProperty $ds.Tables[0].Columns[0].ColumnName
                     }
                 }
-                'SingleValue'
-                {
-                    $ds.Tables[0] | Select-Object -ExpandProperty $ds.Tables[0].Columns[0].ColumnName
-                }
+            }
+            else {
+                Write-Verbose "No output was returned from the SQL instance."
             }
         }
     }
